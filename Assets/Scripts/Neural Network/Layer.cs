@@ -29,8 +29,7 @@ public class Layer
 				weightedInput += inputs[inputNode] * _weights[inputNode, outputNode];
 			}
 
-			//activations[outputNode] = Sigmoid(weightedInput);
-			activations[outputNode] = weightedInput;
+			activations[outputNode] = Sigmoid(weightedInput);
 		}
 
 		return activations;
