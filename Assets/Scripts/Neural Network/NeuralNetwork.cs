@@ -1,36 +1,38 @@
-﻿using UnityEngine;
+﻿using System;
+using System.Linq;
+using UnityEngine;
 
-public class NeuralNetwork : MonoBehaviour
+public class NeuralNetwork
 {
-	// Weight values connecting each input to the first output.
-	public float Weight11;
-	public float Weight21;
+    private Layer[] _layers;
 
-	// Weight values connecting each input to the second output.
-	public float Weight12;
-	public float Weight22;
+    public NeuralNetwork(params int[] layerSizes)
+    {
+        _layers = new Layer[layerSizes.Length - 1];
+        for (int layer_index = 0; layer_index < _layers.Length; ++layer_index)
+        {
+            _layers[layer_index] = new Layer(layerSizes[layer_index], layerSizes[layer_index + 1]);
+        }
+    }
 
-	// Bias values;
-	public float Bias1;
-	public float Bias2;
+    public void SetWeight(int layer, int inputNode, int outputNode, double value) => _layers[layer].SetWeight(inputNode, outputNode, value);
 
-	void Awake()
-	{
-		Weight11 = 0.0f;
-		Weight21 = 0.0f;
+    public void SetBias(int layer, int outputNode, double value) => _layers[layer].SetBias(outputNode, value);
 
-		Weight12 = 0.0f;
-		Weight22 = 0.0f ;
+    public int Classify(double[] inputs)
+    {
+        double[] outputs = CalculateOutputs(inputs);
+        return Array.IndexOf(outputs, outputs.Max());
+    }
 
-        Bias1 = 0;
-        Bias2 = 0;
-	}
+    private double[] CalculateOutputs(double[] inputs)
+    {
+        double[] outputs = inputs;
+        foreach (var layer in _layers)
+        {
+            outputs = layer.CalculateOutputs(outputs);
+        }
 
-	public int Classify(float input1, float input2)
-	{
-		double output1 = (Weight11 * input1) + (Weight21 * input2) + Bias1;
-		double output2 = (Weight12 * input1) + (Weight22 * input2) + Bias2;
-
-		return (output1 > output2) ? 0 : 1;
+        return outputs;
     }
 }

@@ -1,110 +1,133 @@
 using UnityEngine;
 using UnityEngine.UI;
+using static UnityEngine.EventSystems.StandaloneInputModule;
 
 public class ClassificationVisualizer : MonoBehaviour
 {
-    public Slider Weight11Slider;
-    public Slider Weight21Slider;
+    //  Weights 1.
+    public Slider Weights1Slider11;
+    public Slider Weights1Slider21;
 
-    public Slider Weight12Slider;
-    public Slider Weight22Slider;
+    public Slider Weights1Slider12;
+    public Slider Weights1Slider22;
 
-    public Slider Bias1Slider;
-    public Slider Bias2Slider;
+    public Slider Weights1Slider13;
+    public Slider Weights1Slider23;
+
+    // Biases 1.
+    public Slider Biases1Slider1;
+    public Slider Biases1Slider2;
+    public Slider Biases1Slider3;
+
+    // Weights 2.
+    public Slider Weights2Slider11;
+    public Slider Weights2Slider21;
+    public Slider Weights2Slider31;
+
+    public Slider Weights2Slider12;
+    public Slider Weights2Slider22;
+    public Slider Weights2Slider32;
+
+    // Biases 2.
+    public Slider Biases2Slider1;
+    public Slider Biases2Slider2;
 
     private static readonly Color SAFE_COLOR = new Color(122.0f / 255.0f, 182.0f / 255.0f, 248.0f / 255.0f, 0.5f);
     private static readonly Color POISONOUS_COLOR = new Color(229.0f / 255.0f, 101.0f / 255.0f, 102.0f / 255.0f, 0.5f);
-    private Texture2D graphTexture;
-    private NeuralNetwork neuralNetwork;
+
+    private NeuralNetwork _neuralNetwork;
+    private Texture2D _graphTexture;
 
     // Start is called before the first frame update
-    void Start()
+    private void Start()
     {
-        Weight11Slider.onValueChanged.AddListener((float value) => HandleWeight11SliderValueChanged(value));
-        Weight21Slider.onValueChanged.AddListener((float value) => HandleWeight21SliderValueChanged(value));
+        // Initialize the Neural Network.
+        _neuralNetwork = new NeuralNetwork(2, 3, 2);
 
-        Weight12Slider.onValueChanged.AddListener((float value) => HandleWeight12SliderValueChanged(value));
-        Weight22Slider.onValueChanged.AddListener((float value) => HandleWeight22SliderValueChanged(value));
+        // Create a new texture for visualizing the Neural Network's classifications
+        // on the graph.
+        _graphTexture = new Texture2D(180, 100);
+        GetComponent<MeshRenderer>().material.mainTexture = _graphTexture;
 
-        Bias1Slider.onValueChanged.AddListener((float value) => HandleBias1SliderValueChanged(value));
-        Bias2Slider.onValueChanged.AddListener((float value) => HandleBias2SliderValueChanged(value));
+        // Initialize the Slider listeners.
+        InitializeSliderListeners();
 
-        graphTexture = new Texture2D(1800, 1000);
-        GetComponent<MeshRenderer>().material.mainTexture = graphTexture;
-
-        neuralNetwork = FindObjectOfType<NeuralNetwork>();
-
-        VisualizeGraph();
+        // Visualize the graph.
+        UpdateGraph();
     }
 
-    void HandleWeight11SliderValueChanged(float value)
+    private void InitializeSliderListeners()
     {
-        neuralNetwork.Weight11 = value;
-        Debug.Log("Weight 1 1: " + value);
-        VisualizeGraph();
+        // Weights 1.
+        Weights1Slider11.onValueChanged.AddListener((float value) => HandleWeightSliderValueChanged(0, 0, 0, value));
+        Weights1Slider21.onValueChanged.AddListener((float value) => HandleWeightSliderValueChanged(0, 1, 0, value));
+
+        Weights1Slider12.onValueChanged.AddListener((float value) => HandleWeightSliderValueChanged(0, 0, 1, value));
+        Weights1Slider22.onValueChanged.AddListener((float value) => HandleWeightSliderValueChanged(0, 1, 1, value));
+
+        Weights1Slider13.onValueChanged.AddListener((float value) => HandleWeightSliderValueChanged(0, 0, 2, value));
+        Weights1Slider23.onValueChanged.AddListener((float value) => HandleWeightSliderValueChanged(0, 1, 2, value));
+
+        // Biases 1.
+        Biases1Slider1.onValueChanged.AddListener((float value) => HandleBiasSliderValueChanged(0, 0, value));
+        Biases1Slider2.onValueChanged.AddListener((float value) => HandleBiasSliderValueChanged(0, 1, value));
+        Biases1Slider3.onValueChanged.AddListener((float value) => HandleBiasSliderValueChanged(0, 2, value));
+
+        // Weights 2.
+        Weights2Slider11.onValueChanged.AddListener((float value) => HandleWeightSliderValueChanged(1, 0, 0, value));
+        Weights2Slider21.onValueChanged.AddListener((float value) => HandleWeightSliderValueChanged(1, 1, 0, value));
+        Weights2Slider31.onValueChanged.AddListener((float value) => HandleWeightSliderValueChanged(1, 2, 0, value));
+
+        Weights2Slider12.onValueChanged.AddListener((float value) => HandleWeightSliderValueChanged(1, 0, 1, value));
+        Weights2Slider22.onValueChanged.AddListener((float value) => HandleWeightSliderValueChanged(1, 1, 1, value));
+        Weights2Slider32.onValueChanged.AddListener((float value) => HandleWeightSliderValueChanged(1, 2, 1, value));
+
+        // Biases 2.
+        Biases2Slider1.onValueChanged.AddListener((float value) => HandleBiasSliderValueChanged(1, 0, value));
+        Biases2Slider2.onValueChanged.AddListener((float value) => HandleBiasSliderValueChanged(1, 1, value));
     }
 
-    void HandleWeight21SliderValueChanged(float value)
+    private void UpdateGraph()
     {
-        neuralNetwork.Weight21 = value;
-        Debug.Log("Weight 2 1: " + value);
-        VisualizeGraph();
-    }
-
-    void HandleWeight12SliderValueChanged(float value)
-    {
-        neuralNetwork.Weight12 = value;
-        Debug.Log("Weight 1 2: " + value);
-        VisualizeGraph();
-    }
-
-    void HandleWeight22SliderValueChanged(float value)
-    {
-        neuralNetwork.Weight22 = value;
-        Debug.Log("Weight 2 2: " + value);
-        VisualizeGraph();
-    }
-
-    void HandleBias1SliderValueChanged(float value)
-    {
-        neuralNetwork.Bias1 = value;
-        Debug.Log("Bias 1: " + value);
-        VisualizeGraph();
-    }
-
-    void HandleBias2SliderValueChanged(float value)
-    {
-        neuralNetwork.Bias2 = value;
-        Debug.Log("Bias 2: " + value);
-        VisualizeGraph();
-    }
-
-    void VisualizeGraph()
-    {
-        for (int y = 0; y < graphTexture.height; y++)
+        for (int y = 0; y < _graphTexture.height; y++)
         {
-            for (int x = 0; x < graphTexture.width; x++)
+            for (int x = 0; x < _graphTexture.width; x++)
             {
                 VisualizePoint(x, y);
             }
         }
 
-        graphTexture.Apply();
+        _graphTexture.Apply();
     }
 
-    void VisualizePoint(int graphX, int graphY)
+    private void HandleWeightSliderValueChanged(int layer, int inputNode, int outputNode, float value)
     {
-        int predictedClass = neuralNetwork.Classify(graphX / 100.0f, graphY / 100.0f);
+        _neuralNetwork.SetWeight(layer, inputNode, outputNode, value);
+        Debug.Log("On Weight Slider Value Changed: layer=" + layer + ", inputNode=" + inputNode + ", outputNode=" + outputNode + ", value=" + value);
+        UpdateGraph();
+    }
+
+    private void HandleBiasSliderValueChanged(int layer, int outputNode, float value)
+    {
+        _neuralNetwork.SetBias(layer, outputNode, value);
+        Debug.Log("On Bias Slider Value Changed: layer=" + layer + ", outputNode=" + outputNode + ", value=" + value);
+        UpdateGraph();
+    }
+
+    private void VisualizePoint(int graphX, int graphY)
+    {
+        int predictedClass = _neuralNetwork.Classify(new double[] { graphX / 10.0f, graphY / 10.0f });
 
         Color color;
         if (0 == predictedClass)
         {
             color = SAFE_COLOR;
-        } else
+        }
+        else
         {
             color = POISONOUS_COLOR;
         }
 
-        graphTexture.SetPixel(graphX, graphY, color);
+        _graphTexture.SetPixel(graphX, graphY, color);
     }
 }
