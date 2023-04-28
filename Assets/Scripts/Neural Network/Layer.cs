@@ -16,28 +16,34 @@ public class Layer
 		_biases = new double[_outputNodesNumber];
 	}
 
-	public double[] CalculateOutputs(double[] inputs)
-	{
-		var activations = new double[_outputNodesNumber];
-
-		for (int outputNode = 0; outputNode < _outputNodesNumber; ++outputNode)
-		{
-			double weightedInput = _biases[outputNode];
-
-			for (int inputNode = 0; inputNode < _inputNodesNumber; inputNode++)
-			{
-				weightedInput += inputs[inputNode] * _weights[inputNode, outputNode];
-			}
-
-			activations[outputNode] = Sigmoid(weightedInput);
-		}
-
-		return activations;
-	}
-
     public void SetWeight(int inputNode, int outputNode, double value) => _weights[inputNode, outputNode] = value;
 
 	public void SetBias(int outputNode, double value) => _biases[outputNode] = value;
+
+    public double[] CalculateOutputs(double[] inputs)
+    {
+        var activations = new double[_outputNodesNumber];
+
+        for (int outputNode = 0; outputNode < _outputNodesNumber; ++outputNode)
+        {
+            double weightedInput = _biases[outputNode];
+
+            for (int inputNode = 0; inputNode < _inputNodesNumber; inputNode++)
+            {
+                weightedInput += inputs[inputNode] * _weights[inputNode, outputNode];
+            }
+
+            activations[outputNode] = Sigmoid(weightedInput);
+        }
+
+        return activations;
+    }
+
+    public double NodeCost(double outputActivation, double expectedOutput)
+    {
+        double error = outputActivation - expectedOutput;
+        return error * error;
+    }
 
     private double Sigmoid(double weightedInput)
 	{

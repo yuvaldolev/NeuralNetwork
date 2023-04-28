@@ -4,18 +4,14 @@ using UnityEngine;
 
 public class FruitPlotter : MonoBehaviour
 {
-    public TextAsset Data;
     public GameObject SafeFruitPrefab;
     public GameObject PoisonousFruitPrefab;
 
-    private List<Fruit> fruit;
-
-    // Start is called before the first frame update
-    void Start()
+    private void Start()
     {
-        fruit = CsvReader.Read(Data);
+        var fruitLoader = FindObjectOfType<FruitLoader>();
 
-        foreach (var item in fruit)
+        foreach (var item in fruitLoader.Fruit)
         {
             GameObject prefab;
             if (item.Poisonous)
@@ -30,11 +26,5 @@ public class FruitPlotter : MonoBehaviour
 
             Instantiate(prefab, new Vector3(item.SpotSize, item.SpikeLength, 0), Quaternion.identity);
         }
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-
     }
 }

@@ -5,12 +5,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
-public class CsvReader
+public class FruitCsvReader
 {
-    static string SPLIT_RE = @",(?=(?:[^""]*""[^""]*"")*(?![^""]*""))"; // Define delimiters, regular expression craziness
-    static string LINE_SPLIT_RE = @"\r\n|\n\r|\n|\r"; // Define line delimiters, regular experession craziness
+    private static string SPLIT_RE = @",(?=(?:[^""]*""[^""]*"")*(?![^""]*""))"; // Define delimiters, regular expression craziness
+    private static string LINE_SPLIT_RE = @"\r\n|\n\r|\n|\r"; // Define line delimiters, regular experession craziness
 
-    public static List<Fruit> Read(TextAsset data) //Declare method
+    public static Fruit[] Read(TextAsset data) //Declare method
     {
         var list = new List<Fruit>();
 
@@ -33,6 +33,6 @@ public class CsvReader
             list.Add(fruit);
         }
 
-        return list;
+        return list.ToArray();
     }
 }

@@ -1,9 +1,14 @@
+using System.Linq;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using static UnityEngine.EventSystems.StandaloneInputModule;
 
 public class ClassificationVisualizer : MonoBehaviour
 {
+    public int TextureWidth;
+    public int TextureHeight;
+
     //  Weights 1.
     public Slider Weights1Slider11;
     public Slider Weights1Slider21;
@@ -32,11 +37,15 @@ public class ClassificationVisualizer : MonoBehaviour
     public Slider Biases2Slider1;
     public Slider Biases2Slider2;
 
+    public GameObject CostMarker;
+    public GameObject CorrectMaker;
+
     private static readonly Color SAFE_COLOR = new Color(122.0f / 255.0f, 182.0f / 255.0f, 248.0f / 255.0f, 0.5f);
     private static readonly Color POISONOUS_COLOR = new Color(229.0f / 255.0f, 101.0f / 255.0f, 102.0f / 255.0f, 0.5f);
 
     private NeuralNetwork _neuralNetwork;
     private Texture2D _graphTexture;
+    private FruitLoader _fruitLoader;
 
     // Start is called before the first frame update
     private void Start()
@@ -46,14 +55,17 @@ public class ClassificationVisualizer : MonoBehaviour
 
         // Create a new texture for visualizing the Neural Network's classifications
         // on the graph.
-        _graphTexture = new Texture2D(180, 100);
+        _graphTexture = new Texture2D(TextureWidth, TextureHeight);
         GetComponent<MeshRenderer>().material.mainTexture = _graphTexture;
+
+        // Find the FruitLoader.
+        _fruitLoader = FindObjectOfType<FruitLoader>();
 
         // Initialize the Slider listeners.
         InitializeSliderListeners();
 
-        // Visualize the graph.
-        UpdateGraph();
+        // Visualize the starting point.
+        UpdateVisualization();
     }
 
     private void InitializeSliderListeners()
@@ -87,6 +99,27 @@ public class ClassificationVisualizer : MonoBehaviour
         Biases2Slider2.onValueChanged.AddListener((float value) => HandleBiasSliderValueChanged(1, 1, value));
     }
 
+    private void UpdateVisualization()
+    {
+        UpdateGraph();
+        UpdateCostMarker();
+        UpdateCorrectMarker();
+    }
+
+    private void HandleWeightSliderValueChanged(int layer, int inputNode, int outputNode, float value)
+    {
+        _neuralNetwork.SetWeight(layer, inputNode, outputNode, value);
+        Debug.Log("On Weight Slider Value Changed: layer=" + layer + ", inputNode=" + inputNode + ", outputNode=" + outputNode + ", value=" + value);
+        UpdateVisualization();
+    }
+
+    private void HandleBiasSliderValueChanged(int layer, int outputNode, float value)
+    {
+        _neuralNetwork.SetBias(layer, outputNode, value);
+        Debug.Log("On Bias Slider Value Changed: layer=" + layer + ", outputNode=" + outputNode + ", value=" + value);
+        UpdateVisualization();
+    }
+
     private void UpdateGraph()
     {
         for (int y = 0; y < _graphTexture.height; y++)
@@ -100,23 +133,32 @@ public class ClassificationVisualizer : MonoBehaviour
         _graphTexture.Apply();
     }
 
-    private void HandleWeightSliderValueChanged(int layer, int inputNode, int outputNode, float value)
+    private void UpdateCostMarker()
     {
-        _neuralNetwork.SetWeight(layer, inputNode, outputNode, value);
-        Debug.Log("On Weight Slider Value Changed: layer=" + layer + ", inputNode=" + inputNode + ", outputNode=" + outputNode + ", value=" + value);
-        UpdateGraph();
+        var cost = _neuralNetwork.Cost(_fruitLoader.FruitDataPoints);
+        CostMarker.GetComponent<TextMeshPro>().SetText("Cost: " + cost.ToString("G4"));
     }
 
-    private void HandleBiasSliderValueChanged(int layer, int outputNode, float value)
+    private void UpdateCorrectMarker()
     {
-        _neuralNetwork.SetBias(layer, outputNode, value);
-        Debug.Log("On Bias Slider Value Changed: layer=" + layer + ", outputNode=" + outputNode + ", value=" + value);
-        UpdateGraph();
+        var correctAmount = 0;
+        foreach (var dataPoint in _fruitLoader.FruitDataPoints)
+        {
+            var predictedClass = _neuralNetwork.Classify(dataPoint.Inputs());
+            var classificationOutput = new double[] { (0 == predictedClass) ? 1 : 0, (0 == predictedClass) ? 0 : 1 };
+
+            if (Enumerable.SequenceEqual(classificationOutput, dataPoint.ExpectedOutputs()))
+            {
+                correctAmount += 1;
+            }
+        }
+
+        CorrectMaker.GetComponent<TextMeshPro>().SetText("Correct: " + correctAmount + " / " + _fruitLoader.FruitDataPoints.Length);
     }
 
     private void VisualizePoint(int graphX, int graphY)
     {
-        int predictedClass = _neuralNetwork.Classify(new double[] { graphX / 10.0f, graphY / 10.0f });
+        var predictedClass = _neuralNetwork.Classify(new double[] { graphX / 10.0f, graphY / 10.0f });
 
         Color color;
         if (0 == predictedClass)

@@ -25,6 +25,17 @@ public class NeuralNetwork
         return Array.IndexOf(outputs, outputs.Max());
     }
 
+    public double Cost(DataPoint[] data)
+    {
+        double totalCost = 0;
+        foreach (var dataPoint in data)
+        {
+            totalCost += DataPointCost(dataPoint);
+        }
+
+        return totalCost / data.Length;
+    }
+
     private double[] CalculateOutputs(double[] inputs)
     {
         double[] outputs = inputs;
@@ -34,5 +45,19 @@ public class NeuralNetwork
         }
 
         return outputs;
+    }
+
+    private double DataPointCost(DataPoint dataPoint)
+    {
+        double[] outputs = CalculateOutputs(dataPoint.Inputs());
+        Layer outputLayer = _layers.Last();
+
+        double cost = 0;
+        for (int node = 0; node < outputs.Length; ++node)
+        {
+            cost += outputLayer.NodeCost(outputs[node], dataPoint.ExpectedOutputs()[node]);
+        }
+
+        return cost;
     }
 }
